@@ -16,16 +16,21 @@ template <unsigned S> class Heap {
     template <class T> T *alloc(unsigned n) {
         unsigned size = sizeof(T) * n;
 
+        printf("%p\t", esp);
+        if (unsigned long remainder = ((unsigned long)esp % alignof(T))) {
+            remainder = alignof(T) - remainder;
+            printf("%lu\t", remainder);
+            esp += remainder;
+        }
+        printf("%p\n", esp);
+
         if ((esp + size) >= (memory + S)) {
             return nullptr;
         }
+
         void *temp_esp = esp;
         esp += size;
 
-        if (auto remainder = ((unsigned long)esp % 4)) {
-            remainder = 4 - remainder;
-            esp += remainder;
-        }
         num_allocations++;
         return (T *)temp_esp;
     }
