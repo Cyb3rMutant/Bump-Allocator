@@ -10,29 +10,28 @@ template <unsigned S> class BumpDown {
 
     template <class T> T *alloc(unsigned n) {
         unsigned size = sizeof(T) * n;
+        byte *temp = esp;
 
-        unsigned long remainder = 0;
-        if ((remainder = ((unsigned long)esp % alignof(T)))) {
-            esp -= remainder;
+        if (unsigned long remainder = ((unsigned long)esp % alignof(T))) {
+            temp -= remainder;
         }
 
-        if ((esp - size) < memory) {
-            esp += remainder;
+        if ((temp - size) < memory) {
             return nullptr;
         }
 
-        esp -= size;
+        esp = temp - size;
 
         num_allocations++;
         return (T *)esp;
     }
 
     void dealloc() {
-        if (--num_allocations == 0) {
-            delete[] memory;
-            memory = new byte[S];
-            esp = memory + S;
-        }
+        // if (--num_allocations == 0) {
+        delete[] memory;
+        memory = new byte[S];
+        esp = memory + S;
+        // }
     }
 
     int get_num_allocations() { return num_allocations; }
