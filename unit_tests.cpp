@@ -9,6 +9,29 @@
 #define is_aligned(POINTER, BYTE_COUNT)                                        \
     (((unsigned long)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
 
+// Define a simple class for testing
+class MyClass {
+  public:
+    int data;
+    double data2;
+};
+
+// Define a struct for testing
+struct MyStruct {
+    float value;
+    char value2;
+    MyClass *value3;
+};
+
+// Define a union for testing
+union MyUnion {
+    MyStruct *structValue;
+    float floatValue;
+};
+
+// Define an enum for testing
+enum class MyEnum { VALUE1, VALUE2, VALUE3 };
+
 char const *groups[] = {"BumpUp", "BumpDown"};
 
 DEFINE_TEST_G(Test1, BumpDown) {
@@ -86,6 +109,70 @@ DEFINE_TEST_G(Test4, BumpDown) {
     int *z = bumper.alloc<int>(10);
     TEST_MESSAGE(z != nullptr, "Failed to allocate!!!!");
 }
+DEFINE_TEST_G(Test5, BumpDown) {
+    BumpDown<1024> bumpAllocator;
+
+    // Test with a class
+    MyClass *myClassInstance = bumpAllocator.alloc<MyClass>(1);
+    TEST_MESSAGE(myClassInstance != nullptr, "Allocation failed for MyClass!");
+    myClassInstance->data = 42;
+    TEST_MESSAGE(myClassInstance->data == 42, "incorrect data");
+
+    // Test with a struct
+    MyStruct *myStructInstance = bumpAllocator.alloc<MyStruct>(1);
+    TEST_MESSAGE(myStructInstance != nullptr,
+                 "Allocation failed for MyStruct!");
+    myStructInstance->value = 3.14f;
+    myStructInstance->value2 = 'a';
+    myStructInstance->value3 = myClassInstance;
+    TEST_MESSAGE(myStructInstance->value == 3.14f, "incorrect data");
+    TEST_MESSAGE(myStructInstance->value2 == 'a', "incorrect data");
+    TEST_MESSAGE(myStructInstance->value3 == myClassInstance, "incorrect data");
+
+    // Test with a union
+    MyUnion *myUnionInstance = bumpAllocator.alloc<MyUnion>(1);
+    TEST_MESSAGE(myUnionInstance != nullptr, "Allocation failed for MyUnion!");
+    myUnionInstance->floatValue = 42;
+    TEST_MESSAGE(myUnionInstance->floatValue == 42, "incorrect data");
+    myUnionInstance->structValue = myStructInstance;
+    TEST_MESSAGE(myUnionInstance->structValue == myStructInstance,
+                 "incorrect data");
+
+    // Test with an enum (not an object, just checking compilation)
+    MyEnum *myEnumInstance = bumpAllocator.alloc<MyEnum>(1);
+    TEST_MESSAGE(myEnumInstance != nullptr, "Allocation failed for MyEnum!");
+
+    // Test if the first allocation is still valid
+    TEST_MESSAGE(myClassInstance->data == 42, "incorrect data");
+
+    // Check the total number of allocations
+    TEST_MESSAGE(bumpAllocator.get_num_allocations() == 4,
+                 "wrong number of allocations");
+}
+
+DEFINE_TEST_G(Test6, BumpDown) {
+    BumpDown<1024> bumpAllocator;
+
+    // Test with a class
+    MyClass *myClassInstance = bumpAllocator.alloc<MyClass>(1);
+    TEST_MESSAGE(is_aligned(myClassInstance, alignof(MyClass)),
+                 "Alignment is incorrect for this type");
+
+    // Test with a struct
+    MyStruct *myStructInstance = bumpAllocator.alloc<MyStruct>(1);
+    TEST_MESSAGE(is_aligned(myStructInstance, alignof(MyStruct)),
+                 "Alignment is incorrect for this type");
+
+    // Test with a union
+    MyUnion *myUnionInstance = bumpAllocator.alloc<MyUnion>(1);
+    TEST_MESSAGE(is_aligned(myUnionInstance, alignof(MyUnion)),
+                 "Alignment is incorrect for this type");
+
+    // Test with an enum (not an object, just checking compilation)
+    MyEnum *myEnumInstance = bumpAllocator.alloc<MyEnum>(1);
+    TEST_MESSAGE(is_aligned(myEnumInstance, alignof(MyEnum)),
+                 "Alignment is incorrect for this type");
+}
 
 DEFINE_TEST_G(Test1, BumpUp) {
     // Test 1: Allocate memory successfully
@@ -161,6 +248,71 @@ DEFINE_TEST_G(Test4, BumpUp) {
     // Test 3: Fail to allocate due to insufficient memory
     int *z = bumper.alloc<int>(10);
     TEST_MESSAGE(z != nullptr, "Failed to allocate!!!!");
+}
+
+DEFINE_TEST_G(Test5, BumpUp) {
+    BumpUp<1024> bumpAllocator;
+
+    // Test with a class
+    MyClass *myClassInstance = bumpAllocator.alloc<MyClass>(1);
+    TEST_MESSAGE(myClassInstance != nullptr, "Allocation failed for MyClass!");
+    myClassInstance->data = 42;
+    TEST_MESSAGE(myClassInstance->data == 42, "incorrect data");
+
+    // Test with a struct
+    MyStruct *myStructInstance = bumpAllocator.alloc<MyStruct>(1);
+    TEST_MESSAGE(myStructInstance != nullptr,
+                 "Allocation failed for MyStruct!");
+    myStructInstance->value = 3.14f;
+    myStructInstance->value2 = 'a';
+    myStructInstance->value3 = myClassInstance;
+    TEST_MESSAGE(myStructInstance->value == 3.14f, "incorrect data");
+    TEST_MESSAGE(myStructInstance->value2 == 'a', "incorrect data");
+    TEST_MESSAGE(myStructInstance->value3 == myClassInstance, "incorrect data");
+
+    // Test with a union
+    MyUnion *myUnionInstance = bumpAllocator.alloc<MyUnion>(1);
+    TEST_MESSAGE(myUnionInstance != nullptr, "Allocation failed for MyUnion!");
+    myUnionInstance->floatValue = 42;
+    TEST_MESSAGE(myUnionInstance->floatValue == 42, "incorrect data");
+    myUnionInstance->structValue = myStructInstance;
+    TEST_MESSAGE(myUnionInstance->structValue == myStructInstance,
+                 "incorrect data");
+
+    // Test with an enum (not an object, just checking compilation)
+    MyEnum *myEnumInstance = bumpAllocator.alloc<MyEnum>(1);
+    TEST_MESSAGE(myEnumInstance != nullptr, "Allocation failed for MyEnum!");
+
+    // Test if the first allocation is still valid
+    TEST_MESSAGE(myClassInstance->data == 42, "incorrect data");
+
+    // Check the total number of allocations
+    TEST_MESSAGE(bumpAllocator.get_num_allocations() == 4,
+                 "wrong number of allocations");
+}
+
+DEFINE_TEST_G(Test6, BumpUp) {
+    BumpUp<1024> bumpAllocator;
+
+    // Test with a class
+    MyClass *myClassInstance = bumpAllocator.alloc<MyClass>(1);
+    TEST_MESSAGE(is_aligned(myClassInstance, alignof(MyClass)),
+                 "Alignment is incorrect for this type");
+
+    // Test with a struct
+    MyStruct *myStructInstance = bumpAllocator.alloc<MyStruct>(1);
+    TEST_MESSAGE(is_aligned(myStructInstance, alignof(MyStruct)),
+                 "Alignment is incorrect for this type");
+
+    // Test with a union
+    MyUnion *myUnionInstance = bumpAllocator.alloc<MyUnion>(1);
+    TEST_MESSAGE(is_aligned(myUnionInstance, alignof(MyUnion)),
+                 "Alignment is incorrect for this type");
+
+    // Test with an enum (not an object, just checking compilation)
+    MyEnum *myEnumInstance = bumpAllocator.alloc<MyEnum>(1);
+    TEST_MESSAGE(is_aligned(myEnumInstance, alignof(MyEnum)),
+                 "Alignment is incorrect for this type");
 }
 
 int main() {
