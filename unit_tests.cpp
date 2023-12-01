@@ -9,7 +9,7 @@
 #define is_aligned(POINTER, BYTE_COUNT)                                        \
     (((unsigned long)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
 
-char const *groups[] = {"Bump", "BumpDown"};
+char const *groups[] = {"BumpUp", "BumpDown"};
 
 DEFINE_TEST_G(Test1, BumpDown) {
     // Test 1: Allocate memory successfully
@@ -36,11 +36,19 @@ DEFINE_TEST_G(Test2, BumpDown) {
     BumpDown<20 * sizeof(char)> bumper;
     char *x = bumper.alloc<char>(20);
     TEST_MESSAGE(x != nullptr, "Failed to allocate");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
     char *y = bumper.alloc<char>(1);
     TEST_MESSAGE(y == nullptr, "Should have failed to allocate");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
     bumper.dealloc();
+    TEST_MESSAGE(bumper.get_num_allocations() == 0,
+                 "Incorrect number of allocations");
     y = bumper.alloc<char>(20);
     TEST_MESSAGE(y != nullptr, "Failed to allocate after deallocation!!!!");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
 }
 
 DEFINE_TEST_G(Test3, BumpDown) {
@@ -79,9 +87,9 @@ DEFINE_TEST_G(Test4, BumpDown) {
     TEST_MESSAGE(z != nullptr, "Failed to allocate!!!!");
 }
 
-DEFINE_TEST_G(Test1, Bump) {
+DEFINE_TEST_G(Test1, BumpUp) {
     // Test 1: Allocate memory successfully
-    Bump<20 * sizeof(int)> bumper;
+    BumpUp<20 * sizeof(int)> bumper;
     int *x = bumper.alloc<int>(10);
     TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
     TEST_MESSAGE(bumper.get_num_allocations() == 1,
@@ -100,19 +108,27 @@ DEFINE_TEST_G(Test1, Bump) {
                  "Incorrect number of allocations");
 }
 
-DEFINE_TEST_G(Test2, Bump) {
-    Bump<20 * sizeof(char)> bumper;
+DEFINE_TEST_G(Test2, BumpUp) {
+    BumpUp<20 * sizeof(char)> bumper;
     char *x = bumper.alloc<char>(20);
     TEST_MESSAGE(x != nullptr, "Failed to allocate");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
     char *y = bumper.alloc<char>(1);
     TEST_MESSAGE(y == nullptr, "Should have failed to allocate");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
     bumper.dealloc();
+    TEST_MESSAGE(bumper.get_num_allocations() == 0,
+                 "Incorrect number of allocations");
     y = bumper.alloc<char>(20);
     TEST_MESSAGE(y != nullptr, "Failed to allocate after deallocation!!!!");
+    TEST_MESSAGE(bumper.get_num_allocations() == 1,
+                 "Incorrect number of allocations");
 }
 
-DEFINE_TEST_G(Test3, Bump) {
-    Bump<64 * sizeof(char)> B;
+DEFINE_TEST_G(Test3, BumpUp) {
+    BumpUp<64 * sizeof(char)> B;
     char *a1 = B.alloc<char>(1);
     TEST_MESSAGE(is_aligned(a1, alignof(char)),
                  "Alignment is incorrect for this type");
@@ -132,9 +148,9 @@ DEFINE_TEST_G(Test3, Bump) {
     TEST_MESSAGE(is_aligned(a6, alignof(char)),
                  "Alignment is incorrect for this type");
 }
-DEFINE_TEST_G(Test4, Bump) {
+DEFINE_TEST_G(Test4, BumpUp) {
     // Test 1: Allocate memory successfully
-    Bump<20 * sizeof(int)> bumper;
+    BumpUp<20 * sizeof(int)> bumper;
     int *x = bumper.alloc<int>(10);
     TEST_MESSAGE(x != nullptr, "Failed to allocate!!!!");
 

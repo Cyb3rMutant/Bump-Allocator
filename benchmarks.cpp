@@ -37,7 +37,7 @@ void benchmark(int iterations, Func func, Args &&...args) {
 }
 
 void test_up() {
-    Bump<4294967295> b;
+    BumpUp<4294967295> b;
 
     while (b.alloc<int>(1)) {
         b.alloc<char>(1);
@@ -47,7 +47,7 @@ void test_up() {
     b.dealloc();
 }
 void test_down() {
-    Bump<4294967295> b;
+    BumpDown<4294967295> b;
 
     while (b.alloc<int>(1)) {
         b.alloc<char>(1);
@@ -59,7 +59,7 @@ void test_down() {
 
 int main() {
 
-    int iterations = 100;
+    int iterations = 10;
 
     benchmark(iterations, test_up);
     benchmark(iterations, test_down);
