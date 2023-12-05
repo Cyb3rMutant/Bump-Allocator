@@ -92,7 +92,10 @@ template <size_t S> class BumpUp {
     /**
      * @brief Forces deallocation of all memory.
      */
-    void force_dealloc() { ptr = start; }
+    void force_dealloc() {
+        ptr = start;
+        num_allocations = 0;
+    }
 
     /**
      * @brief Destructor for the BumpUp class.

@@ -3,66 +3,109 @@
 #include <chrono>
 #include <iostream>
 #include <numeric>
+#include <string>
 #include <vector>
 
-template <typename Func, typename... Args>
-double benchmark_once(Func func, Args &&...args) {
-    using namespace std::chrono;
+inline constexpr size_t MAX = 9876;
 
-    auto t1 = high_resolution_clock::now();
-    func(std::forward<Args>(args)...);
-    auto t2 = high_resolution_clock::now();
-
-    duration<double, std::milli> ms_double = t2 - t1;
-    return ms_double.count();
-}
-
-template <typename Func, typename... Args>
-void benchmark(int iterations, Func func, Args &&...args) {
-
-    std::vector<double> elapsed_times;
-    elapsed_times.reserve(iterations);
-
-    for (int i = 0; i < iterations; ++i) {
-        elapsed_times.push_back(
-            benchmark_once(func, std::forward<Args>(args)...));
+class Benchmark {
+  public:
+    Benchmark() {
+        num_benchmars = 0;
+        num_iterations = 1;
     }
 
-    double average_time =
-        std::accumulate(elapsed_times.begin(), elapsed_times.end(), 0.0) /
-        iterations;
+    Benchmark(int iters) {
+        num_benchmars = 0;
+        num_iterations = iters;
+    }
 
-    std::cout << "Average time taken over " << iterations
-              << " iterations: " << average_time << " milliseconds\n";
-}
+    template <typename Func, typename... Args>
+    void benchmark(const char *name, Func func, Args &&...args) {
+
+        using namespace std::chrono;
+
+        std::vector<double> elapsed_times;
+        elapsed_times.reserve(num_iterations);
+
+        for (int i = 0; i < num_iterations; ++i) {
+
+            time_point t1 = high_resolution_clock::now();
+            func(std::forward<Args>(args)...);
+            time_point t2 = high_resolution_clock::now();
+
+            duration<double, std::milli> ms_double = t2 - t1;
+            elapsed_times.push_back(ms_double.count());
+        }
+
+        double result =
+            std::accumulate(elapsed_times.begin(), elapsed_times.end(), 0.0) /
+            num_iterations;
+
+        names.push_back(name);
+        results.push_back(result);
+        num_benchmars++;
+    }
+
+    void print() {
+        if (!num_benchmars)
+            return;
+
+        for (int i = 0; i < num_benchmars; i++) {
+            std::cout << names[i] << "\t||\t" << results[i] << "\t||\t"
+                      << relative(results[i]) << std::endl;
+        }
+    }
+
+  private:
+    int num_benchmars;
+    int num_iterations;
+    std::vector<const char *> names;
+    std::vector<double> results;
+
+    inline double relative(double runtime) {
+        return 100 * (results[0] / runtime);
+    }
+};
 
 void test_up() {
-    BumpUp<4294967295> b;
+    BumpUp<MAX> b;
 
-    while (b.alloc<int>(1)) {
-        b.alloc<char>(1);
-        b.alloc<short>(1);
-        b.alloc<char>(1);
+    for (int i = 0; i < 5; i++) {
+        while (b.alloc<int>(1)) {
+            b.alloc<char>(1);
+            b.alloc<short>(1);
+            b.alloc<char>(1);
+        }
+        b.force_dealloc();
     }
-    b.dealloc();
 }
-void test_down() {
-    BumpDown<4294967295> b;
 
-    while (b.alloc<int>(1)) {
-        b.alloc<char>(1);
-        b.alloc<short>(1);
-        b.alloc<char>(1);
+void test_down() {
+    BumpDown<MAX> b;
+
+    for (int i = 0; i < 5; i++) {
+        while (b.alloc<int>(1)) {
+            b.alloc<char>(1);
+            b.alloc<short>(1);
+            b.alloc<char>(1);
+        }
+        b.force_dealloc();
     }
-    b.dealloc();
 }
 
 int main() {
+    Benchmark b(500);
 
-    int iterations = 10;
+    b.benchmark("up1", test_up);
+    b.benchmark("down1", test_down);
+    b.benchmark("up2", test_up);
+    b.benchmark("down2", test_down);
+    b.benchmark("up3", test_up);
+    b.benchmark("down3", test_down);
+    b.benchmark("up4", test_up);
+    b.benchmark("down4", test_down);
 
-    benchmark(iterations, test_up);
-    benchmark(iterations, test_down);
-
+    b.print();
     return 0;
 }

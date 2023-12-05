@@ -89,7 +89,10 @@ template <size_t S> class BumpDown {
     /**
      * @brief Forces deallocation of all memory.
      */
-    void force_dealloc() { ptr = end; }
+    void force_dealloc() {
+        ptr = end;
+        num_allocations = 0;
+    }
 
     /**
      * @brief Destructor for the BumpDown class.

@@ -174,6 +174,35 @@ DEFINE_TEST_G(Test6, BumpDown) {
                  "Alignment is incorrect for this type");
 }
 
+DEFINE_TEST_G(Test7, BumpDown) {
+    BumpDown<sizeof(int) * 15> b;
+
+    for (int i = 0; i < 5; i++) {
+        b.force_dealloc();
+        do {
+            b.alloc<char>(1);
+            b.alloc<short>(1);
+            b.alloc<char>(1);
+        } while (b.alloc<int>(1));
+        TEST_MESSAGE(b.get_num_allocations() == 20,
+                     "incorrect allocation number");
+    }
+    for (int i = 19; i >= 0; i--) {
+        b.dealloc();
+        TEST_MESSAGE(b.get_num_allocations() == i,
+                     "incorrect allocation number");
+    }
+}
+
+DEFINE_TEST_G(Test8, BumpDown) {
+    BumpDown<sizeof(int) * 3 + sizeof(float) * 3 + sizeof(MyClass) * 3> b;
+
+    TEST_MESSAGE(b.alloc<int>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<float>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<MyClass>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<char>(1) == nullptr, "should have failed to allocate");
+}
+
 DEFINE_TEST_G(Test1, BumpUp) {
     // Test 1: Allocate memory successfully
     BumpUp<20 * sizeof(int)> bumper;
@@ -313,6 +342,35 @@ DEFINE_TEST_G(Test6, BumpUp) {
     MyEnum *myEnumInstance = bumpAllocator.alloc<MyEnum>(1);
     TEST_MESSAGE(is_aligned(myEnumInstance, alignof(MyEnum)),
                  "Alignment is incorrect for this type");
+}
+
+DEFINE_TEST_G(Test7, BumpUp) {
+    BumpUp<sizeof(int) * 15> b;
+
+    for (int i = 0; i < 5; i++) {
+        b.force_dealloc();
+        do {
+            b.alloc<char>(1);
+            b.alloc<short>(1);
+            b.alloc<char>(1);
+        } while (b.alloc<int>(1));
+        TEST_MESSAGE(b.get_num_allocations() == 20,
+                     "incorrect allocation number");
+    }
+    for (int i = 19; i >= 0; i--) {
+        b.dealloc();
+        TEST_MESSAGE(b.get_num_allocations() == i,
+                     "incorrect allocation number");
+    }
+}
+
+DEFINE_TEST_G(Test8, BumpUp) {
+    BumpUp<sizeof(int) * 3 + sizeof(float) * 3 + sizeof(MyClass) * 3> b;
+
+    TEST_MESSAGE(b.alloc<int>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<float>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<MyClass>(3) != nullptr, "failed to allocate");
+    TEST_MESSAGE(b.alloc<char>(1) == nullptr, "should have failed to allocate");
 }
 
 int main() {
