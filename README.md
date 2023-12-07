@@ -23,10 +23,11 @@
     - [Library](#library)
       - [usage](#usage)
     - [Benchmark tests](#benchmark-tests)
-      - [`test_up_small` and `test_down_small`](#-test-up-small--and--test-down-small-)
-      - [`test_up_big` and `test_down_big`](#-test-up-big--and--test-down-big-)
-      - [`new_alignment` and `old_alignment`](#-new-alignment--and--old-alignment-)
-      - [`test_dealloc` and `test_destructor`](#-test-dealloc--and--test-destructor-)
+      - [`test_up_small` and `test_down_small`](#test-up-small-and-test-down-small)
+      - [`test_up_big` and `test_down_big`](#test-up-big-and-test-down-big)
+      - [`new_alignment` and `old_alignment`](#new-alignment-and-old-alignment)
+      - [`test_dealloc` and `test_destructor`](#test-dealloc-and-test-destructor)
+      - [os and cpu info](#os-and-cpu-info)
 
 # Intro
 
@@ -105,13 +106,15 @@ int *z = bumper.alloc<int>(3); // will return nullptr
 
 ### alignement
 
-For a CPU, it's much easier to not cross block-borders when reading something like an integer, so an alignment of 4 means that data of this type should be stored starting at an address that is a multiple of 4:
+A CPU finds it more efficient to avoid crossing block borders when reading data such as an integer. Therefore, an alignment of 4 implies that data of this type should commence at an address that is divisible by 4.
 
 ```
 memory byte    0 1 2 3      4 5 6 7      8 9 10 11
- integer       goooood
-                   baaaaaaaaad
+integer        goooood
+                   baaaaaaaaadd
 ```
+
+[reference for the above demonstration](https://stackoverflow.com/a/11386991)
 
 Thus to align the pointer to the size of the specified type, we originally used the following modulo operation:
 
@@ -126,6 +129,8 @@ what it does is calculate the remainder of the current pointer and then inverse 
 ```cpp
 (ptr - 1u + alignment) & -alignment;
 ```
+
+[reference for the above line](https://stackoverflow.com/a/67834958)
 
 which calculates the 2's complement of the alignment value (which is clearing the lowest bits and leaving the rest) and then using a bitwise AND to clear the unaligned bits from the address. it also adds alignment-1 to the pointer to invert the remainder of it.
 
@@ -163,7 +168,7 @@ the final result is `76` which is divisible by `4`
 
 ## Deallocation
 
-When deallocating happens, a straightforward approach involves resetting the bump pointer to the initial position of the pre-allocated memory chunk. This rapid mass deallocation method, however, bypasses the invocation of `free` on the allocated objects. Despite its efficiency in freeing up memory quickly, it is essential to consider the potential implications on resource management and cleanup procedures within the context of bump allocation.
+When deallocating happens, the approach is resetting the bump pointer to the initial position of the pre-allocated memory chunk. This rapid mass deallocation method, however, bypasses the invocation of `free` on the allocated objects. Despite its efficiency in freeing up memory quickly, it is essential to consider the potential implications on resource management and cleanup procedures within the context of bump allocation.
 
 ### Usage
 
@@ -184,7 +189,7 @@ in this section i will explain the reasoning behind each unit test. There is 16 
 
 ## extra macros and data structures
 
-- `is_aligned`: takes in a pointer and the alignment size and checks if the pointer is aligned
+- `is_aligned`: takes in a pointer and the alignment size and checks if the pointer is aligned. [reference for the macro](https://stackoverflow.com/a/1898487)
 
 - `MyClass`, `MyStruct`, `MyUnion` and `MyEnum`: abritary data structures that are used in the tests to be allocated and test their different alignments
 
@@ -274,6 +279,8 @@ test 4         0.00122352     2.02512792
 
 ### Benchmark tests
 
+the below results are for different benchmark tests, and they have all been run 5000 times and the average of that was taken. the tests aim to check different aspects of the allocator like object size, alignment and freeing.
+
 ![benchmarks](./img/benchmark.png)
 
 #### `test_up_small` and `test_down_small`
@@ -291,3 +298,7 @@ this benchmark is more focused on the lower level details of the implemntation, 
 #### `test_dealloc` and `test_destructor`
 
 this test is about whether to create a new bumper over and over or just use the dealloc method which will simply resit the pointer to the start (or end depending on which implemntation) of the allocator. the ouput says that it is **3%** faster, but it is suspected to go way heigher due to the number of `new` calls increasing as its a costly operator compared to copying a pointer
+
+#### os and cpu info
+
+![](./img/csct-info.png)

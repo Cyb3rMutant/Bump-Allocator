@@ -13,7 +13,7 @@ struct MyStruct {
 void test_up_small() {
     BumpUp<sizeof(int) * 10000> b;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 120; i++) {
         while (b.alloc<int>(1)) {
             b.alloc<char>(1);
             b.alloc<short>(1);
@@ -26,7 +26,7 @@ void test_up_small() {
 void test_down_small() {
     BumpDown<sizeof(int) * 10000> b;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 120; i++) {
         while (b.alloc<int>(1)) {
             b.alloc<char>(1);
             b.alloc<short>(1);
@@ -39,7 +39,7 @@ void test_down_small() {
 void test_up_big() {
     BumpUp<sizeof(int) * 10000> b;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 120; i++) {
         while (b.alloc<MyStruct>(1))
             b.alloc<char>(1);
         b.force_dealloc();
@@ -49,7 +49,7 @@ void test_up_big() {
 void test_down_big() {
     BumpDown<sizeof(int) * 10000> b;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 120; i++) {
         while (b.alloc<MyStruct>(1))
             b.alloc<char>(1);
         b.force_dealloc();
