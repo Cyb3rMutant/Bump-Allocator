@@ -1,6 +1,6 @@
-#include "balloc.hpp"
-#include "benchmark.h"
-#include "r_balloc.hpp"
+#include <allocators/balloc.hpp>
+#include <allocators/r_balloc.hpp>
+#include <benchmark.hpp>
 #include <cstdint>
 
 struct MyStruct {

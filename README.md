@@ -46,14 +46,14 @@ $ cd worksheet-2
 next, you can run the unit tests using the following commands:
 
 ```bash
-$ clang++ -std=c++17 -o unit unit_tests.cpp simpletest/simpletest.cpp
+$ clang++ -std=c++17 -o unit unit_tests.cpp include/simpletest/simpletest.cpp
 $ ./unit
 ```
 
 and the benchmarks:
 
 ```bash
-$ clang++ -std=c++17 -o bench benchmarks.cpp
+$ clang++ -O3 -std=c++17 -o bench benchmarks.cpp
 $ ./bench
 ```
 
@@ -63,13 +63,15 @@ you can also use the library as a submodule in your project by following the bel
 
 ```bash
 $ git submodule add https://gitlab.uwe.ac.uk/y2-abuhummos/worksheet-2.git
+$ export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH:+${CPLUS_INCLUDE_PATH}:}<path/to/include>"
 ```
 
 and then your `cpp` or `hpp` files:
 
 ```cpp
-#include "worksheet-2/balloc.hpp"
-#include "worksheet-2/r_balloc.hpp"
+#include <allocators/balloc.hpp>
+#include <allocators/r_balloc.hpp>
+#include <bencmark.hpp>
 ```
 
 # Task 1

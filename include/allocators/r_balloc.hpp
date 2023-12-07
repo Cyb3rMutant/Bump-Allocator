@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file r_balloc.hpp
  * @brief Defines the BumpDown class for efficient bump-pointer memory

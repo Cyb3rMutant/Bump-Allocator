@@ -1,3 +1,5 @@
+#pragma once
+
 /**
  * @file balloc.hpp
  * @brief Defines the BumpUp class for efficient bump-pointer memory

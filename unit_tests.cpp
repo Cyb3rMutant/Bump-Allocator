@@ -1,10 +1,10 @@
-#include "balloc.hpp"
-#include "r_balloc.hpp"
+#include <allocators/balloc.hpp>
+#include <allocators/r_balloc.hpp>
 
-#include "simpletest/simpletest.h"
 #include <cstddef>
 #include <iostream>
 #include <ostream>
+#include <simpletest/simpletest.h>
 
 #define is_aligned(POINTER, BYTE_COUNT)                                        \
     (((unsigned long)(const void *)(POINTER)) % (BYTE_COUNT) == 0)
