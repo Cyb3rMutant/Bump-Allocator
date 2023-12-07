@@ -46,14 +46,14 @@ $ cd worksheet-2
 next, you can run the unit tests using the following commands:
 
 ```bash
-$ clang++ -std=c++17 -o unit unit_tests.cpp include/simpletest/simpletest.cpp
+$ clang++ -I./include -std=c++17 -o unit unit_tests.cpp include/simpletest/simpletest.cpp
 $ ./unit
 ```
 
 and the benchmarks:
 
 ```bash
-$ clang++ -O3 -std=c++17 -o bench benchmarks.cpp
+$ clang++ -I./include -O3 -std=c++17 -o bench benchmarks.cpp
 $ ./bench
 ```
 
@@ -278,16 +278,16 @@ test 4         0.00122352     2.02512792
 
 #### `test_up_small` and `test_down_small`
 
-this test is for creating a number of unaligned literal objects multiple times, and the bump down is **0.65%** faster, which is not much, but that is due to how small the data is.
+this test is for creating a number of unaligned literal objects multiple times, and the bump down is **22.7%** faster, which is not much, but that is due to how small the data is.
 
 #### `test_up_big` and `test_down_big`
 
-this one is about creating big objects, for example here we are using a struct with 4 `double`s in it. and this benchmark has a more noticable difference being **3.74%** faster, which shows the potential of how faster are the bump down implemntation when the objects grown in size
+this one is about creating big objects, for example here we are using a struct with 4 `double`s in it. and this benchmark has a more noticable difference being **22.1%** faster
 
 #### `new_alignment` and `old_alignment`
 
-this benchmark is more focused on the lower level details of the implemntation, and tests the alignment with the modulo operation and the alignment with bit shifting. the output shows that the bit shifting is faster by **5%**, so not only does it save memory, its also faster
+this benchmark is more focused on the lower level details of the implemntation, and tests the alignment with the modulo operation and the alignment with bit shifting. the output shows that the bit shifting is faster by **6%**, so not only does it save memory, its also faster
 
 #### `test_dealloc` and `test_destructor`
 
-this test is about whether to create a new bumper over and over or just use the dealloc method which will simply resit the pointer to the start (or end depending on which implemntation) of the allocator. the ouput says that it is **6%** faster, but it is suspected to go way heigher if the number of `new` calls increases as its a costly operator compared to copying a pointer
+this test is about whether to create a new bumper over and over or just use the dealloc method which will simply resit the pointer to the start (or end depending on which implemntation) of the allocator. the ouput says that it is **3%** faster, but it is suspected to go way heigher due to the number of `new` calls increasing as its a costly operator compared to copying a pointer
