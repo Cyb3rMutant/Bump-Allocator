@@ -1,0 +1,3 @@
+[submodule "simpletest"]
+	path = include/simpletest
+	url = https://github.com/kudaba/simpletest
