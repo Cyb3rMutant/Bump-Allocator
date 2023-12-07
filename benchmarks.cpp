@@ -1,75 +1,17 @@
 #include "balloc.hpp"
+#include "benchmark.h"
 #include "r_balloc.hpp"
-#include <chrono>
-#include <iostream>
-#include <numeric>
-#include <string>
-#include <vector>
+#include <cstdint>
 
-inline constexpr size_t MAX = 9876;
-
-class Benchmark {
-  public:
-    Benchmark() {
-        num_benchmars = 0;
-        num_iterations = 1;
-    }
-
-    Benchmark(int iters) {
-        num_benchmars = 0;
-        num_iterations = iters;
-    }
-
-    template <typename Func, typename... Args>
-    void benchmark(const char *name, Func func, Args &&...args) {
-
-        using namespace std::chrono;
-
-        std::vector<double> elapsed_times;
-        elapsed_times.reserve(num_iterations);
-
-        for (int i = 0; i < num_iterations; ++i) {
-
-            time_point t1 = high_resolution_clock::now();
-            func(std::forward<Args>(args)...);
-            time_point t2 = high_resolution_clock::now();
-
-            duration<double, std::milli> ms_double = t2 - t1;
-            elapsed_times.push_back(ms_double.count());
-        }
-
-        double result =
-            std::accumulate(elapsed_times.begin(), elapsed_times.end(), 0.0) /
-            num_iterations;
-
-        names.push_back(name);
-        results.push_back(result);
-        num_benchmars++;
-    }
-
-    void print() {
-        if (!num_benchmars)
-            return;
-
-        for (int i = 0; i < num_benchmars; i++) {
-            std::cout << names[i] << "\t||\t" << results[i] << "\t||\t"
-                      << relative(results[i]) << std::endl;
-        }
-    }
-
-  private:
-    int num_benchmars;
-    int num_iterations;
-    std::vector<const char *> names;
-    std::vector<double> results;
-
-    inline double relative(double runtime) {
-        return 100 * (results[0] / runtime);
-    }
+struct MyStruct {
+    double a;
+    double a1;
+    double a2;
+    double a3;
 };
 
-void test_up() {
-    BumpUp<MAX> b;
+void test_up_small() {
+    BumpUp<sizeof(int) * 10000> b;
 
     for (int i = 0; i < 5; i++) {
         while (b.alloc<int>(1)) {
@@ -81,8 +23,8 @@ void test_up() {
     }
 }
 
-void test_down() {
-    BumpDown<MAX> b;
+void test_down_small() {
+    BumpDown<sizeof(int) * 10000> b;
 
     for (int i = 0; i < 5; i++) {
         while (b.alloc<int>(1)) {
@@ -91,21 +33,85 @@ void test_down() {
             b.alloc<char>(1);
         }
         b.force_dealloc();
+    }
+}
+
+void test_up_big() {
+    BumpUp<sizeof(int) * 10000> b;
+
+    for (int i = 0; i < 5; i++) {
+        while (b.alloc<MyStruct>(1))
+            b.alloc<char>(1);
+        b.force_dealloc();
+    }
+}
+
+void test_down_big() {
+    BumpDown<sizeof(int) * 10000> b;
+
+    for (int i = 0; i < 5; i++) {
+        while (b.alloc<MyStruct>(1))
+            b.alloc<char>(1);
+        b.force_dealloc();
+    }
+}
+
+char *old_alignement(char *ptr) {
+    char *new_ptr = ptr;
+    if (unsigned long remainder = ((unsigned long)ptr % alignof(int))) {
+        new_ptr += alignof(int) - remainder;
+    }
+    return new_ptr;
+}
+
+char *new_alignement(char *ptr) {
+    char *new_ptr = reinterpret_cast<char *>(
+        (reinterpret_cast<uintptr_t>(ptr) - 1u + alignof(int)) & -alignof(int));
+    return new_ptr;
+}
+
+void test_dealloc() {
+    BumpDown<1024> b;
+    for (int i = 0; i < 400; i++) {
+        b.alloc<int>(256);
+        b.dealloc();
+    }
+}
+
+void test_destruct() {
+    for (int i = 0; i < 400; i++) {
+        BumpDown<1024> b;
+        b.alloc<int>(256);
     }
 }
 
 int main() {
-    Benchmark b(500);
+    {
+        Benchmark b(5000);
+        b.benchmark("up small obj", test_up_small);
+        b.benchmark("down small obj", test_down_small);
+        b.print();
+    }
+    {
+        Benchmark b(5000);
+        b.benchmark("up big obj", test_up_big);
+        b.benchmark("down big obj", test_down_big);
+        b.print();
+    }
+    {
+        Benchmark b(5000);
+        b.benchmark("new alignement", new_alignement,
+                    reinterpret_cast<char *>(0x12345678));
+        b.benchmark("old alignement", old_alignement,
+                    reinterpret_cast<char *>(0x12345678));
+        b.print();
+    }
+    {
+        Benchmark b(5000);
+        b.benchmark("dealloc", test_dealloc);
+        b.benchmark("destructor", test_destruct);
+        b.print();
+    }
 
-    b.benchmark("up1", test_up);
-    b.benchmark("down1", test_down);
-    b.benchmark("up2", test_up);
-    b.benchmark("down2", test_down);
-    b.benchmark("up3", test_up);
-    b.benchmark("down3", test_down);
-    b.benchmark("up4", test_up);
-    b.benchmark("down4", test_down);
-
-    b.print();
     return 0;
 }
